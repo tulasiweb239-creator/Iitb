@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AXIOM — Neural Interface</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e16;
+    --bg-raised:#0f1420;
+    --ink:#e7ecf3;
+    --ink-dim:#8791a3;
+    --line:#1e2634;
+    --cyan:#4de1ec;
+    --magenta:#ff5b8f;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+    --font-body:'Inter', sans-serif;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px); scroll-behavior:smooth;}
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.5;
+    overflow-x:hidden;
+  }
+  img{max-width:100%;}
+  .wrap{max-width:1120px; margin:0 auto; padding:0 28px;}
+
+  /* subtle circuit backdrop */
+  .circuit-bg{
+    position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.35;
+  }
+
+  header{
+    position:sticky; top:env(safe-area-inset-top,0px); z-index:10;
+    background:rgba(10,14,22,.75); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 28px; max-width:1120px; margin:0 auto;
+  }
+  .logo{
+    font-family:var(--font-mono); font-size:15px; letter-spacing:.02em; color:var(--ink);
+    display:flex; align-items:center; gap:8px;
+  }
+  .logo .dot{width:7px; height:7px; border-radius:50%; background:var(--cyan); box-shadow:0 0 8px var(--cyan);}
+  nav a{color:var(--ink-dim); text-decoration:none; font-size:14px; margin-left:28px;}
+  nav a:hover, nav a:focus-visible{color:var(--ink);}
+  .nav-links{display:flex; align-items:center;}
+
+  main{position:relative; z-index:1;}
+
+  /* HERO */
+  .hero{
+    padding:96px 0 80px;
+    display:grid; grid-template-columns:1.15fr .85fr; gap:48px; align-items:center;
+  }
+  .hero-copy p.kicker{
+    font-family:var(--font-mono); font-size:13px; color:var(--cyan);
+    margin-bottom:18px;
+  }
+  .hero-copy h1{
+    font-family:var(--font-display); font-weight:700;
+    font-size:clamp(2.4rem, 5.4vw, 4rem);
+    line-height:1.05; letter-spacing:-.01em;
+    max-width:14ch;
+  }
+  .hero-copy p.lede{
+    margin-top:22px; max-width:46ch; color:var(--ink-dim); font-size:17px;
+  }
+  .hero-actions{margin-top:34px; display:flex; gap:14px; flex-wrap:wrap;}
+  .btn{
+    font-family:var(--font-body); font-weight:500; font-size:15px;
+    padding:13px 24px; border-radius:3px; text-decoration:none;
+    display:inline-block; border:1px solid transparent; cursor:pointer;
+    transition:transform .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .btn-primary{background:var(--cyan); color:#04121a;}
+  .btn-primary:hover{transform:translateY(-1px); background:#67e9f2;}
+  .btn-ghost{border-color:var(--line); color:var(--ink);}
+  .btn-ghost:hover{border-color:var(--ink-dim);}
+  .btn:focus-visible{outline:2px solid var(--cyan); outline-offset:2px;}
+
+  .hero-visual{position:relative; aspect-ratio:1/1;}
+
+  /* MARQUEE / STATS */
+  .stats{
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    padding:28px 0;
+  }
+  .stats .wrap{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:24px;
+  }
+  .stat b{
+    display:block; font-family:var(--font-display); font-size:28px; color:var(--cyan);
+  }
+  .stat span{font-size:13px; color:var(--ink-dim);}
+
+  /* CAPABILITIES */
+  section{padding:88px 0;}
+  .section-head{max-width:52ch; margin-bottom:52px;}
+  .section-head p.kicker{font-family:var(--font-mono); font-size:13px; color:var(--magenta); margin-bottom:14px;}
+  .section-head h2{font-family:var(--font-display); font-size:clamp(1.8rem,3.4vw,2.6rem); font-weight:700; letter-spacing:-.01em;}
+  .section-head p.desc{margin-top:14px; color:var(--ink-dim); font-size:16px;}
+
+  .grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:1px;
+    background:var(--line); border:1px solid var(--line);
+  }
+  .card{
+    background:var(--bg); padding:32px 28px;
+  }
+  .card .idx{font-family:var(--font-mono); font-size:12px; color:var(--ink-dim);}
+  .card h3{font-family:var(--font-display); font-size:19px; margin-top:14px; font-weight:500;}
+  .card p{margin-top:10px; font-size:14.5px; color:var(--ink-dim);}
+
+  /* HOW IT WORKS - timeline (genuine sequence) */
+  .timeline{border-left:1px solid var(--line); margin-left:6px;}
+  .tl-item{position:relative; padding:0 0 44px 32px;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-item::before{
+    content:''; position:absolute; left:-5px; top:4px;
+    width:9px; height:9px; border-radius:50%; background:var(--bg); border:2px solid var(--cyan);
+  }
+  .tl-item h3{font-family:var(--font-display); font-size:18px; font-weight:500;}
+  .tl-item p{color:var(--ink-dim); font-size:14.5px; margin-top:6px; max-width:52ch;}
+  .tl-item .step-label{font-family:var(--font-mono); font-size:12px; color:var(--ink-dim); margin-bottom:6px;}
+
+  /* SPECS */
+  .specs-table{width:100%; border-collapse:collapse;}
+  .specs-table tr{border-bottom:1px solid var(--line);}
+  .specs-table tr:first-child{border-top:1px solid var(--line);}
+  .specs-table td{padding:16px 4px; font-size:14.5px;}
+  .specs-table td:first-child{color:var(--ink-dim); font-family:var(--font-mono); font-size:13px; width:40%;}
+
+  /* CTA */
+  .cta{
+    border:1px solid var(--line); border-radius:4px; padding:56px;
+    display:flex; align-items:center; justify-content:space-between; gap:32px; flex-wrap:wrap;
+    background:linear-gradient(135deg, rgba(77,225,236,.05), rgba(255,91,143,.05));
+  }
+  .cta h2{font-family:var(--font-display); font-size:clamp(1.6rem,3vw,2.2rem); font-weight:700; max-width:16ch;}
+  .cta p{color:var(--ink-dim); margin-top:10px; max-width:40ch;}
+
+  footer{border-top:1px solid var(--line); padding:36px 0; color:var(--ink-dim); font-size:13px;}
+  footer .wrap{display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;}
+
+  @media (max-width: 760px){
+    .hero{grid-template-columns:1fr; padding-top:56px;}
+    .hero-visual{max-width:280px; margin:0 auto;}
+    .stats .wrap{grid-template-columns:repeat(2,1fr); row-gap:20px;}
+    .grid{grid-template-columns:1fr;}
+    nav a{margin-left:16px; font-size:13px;}
+    .cta{padding:36px 24px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<svg class="circuit-bg" viewBox="0 0 1200 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="#1e2634" stroke-width="1" fill="none">
+    <path d="M0 120 H260 V300 H520"/>
+    <path d="M1200 200 H900 V60 H700"/>
+    <path d="M0 700 H180 V560 H420 V680"/>
+    <path d="M1200 780 H960 V620 H760"/>
+    <path d="M300 900 V760 H540 V820"/>
+  </g>
+  <g fill="#4de1ec" opacity=".5">
+    <circle cx="260" cy="300" r="3"/>
+    <circle cx="900" cy="60" r="3"/>
+    <circle cx="420" cy="560" r="3"/>
+    <circle cx="760" cy="620" r="3"/>
+  </g>
+</svg>
+
+<header>
+  <nav>
+    <div class="logo"><span class="dot"></span>AXIOM</div>
+    <div class="nav-links">
+      <a href="#capabilities">Capabilities</a>
+      <a href="#how">How it works</a>
+      <a href="#specs">Specs</a>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <section class="hero wrap">
+    <div class="hero-copy">
+      <p class="kicker">// neural interface, gen 4</p>
+      <h1>Your nervous system, given a second thread.</h1>
+      <p class="lede">Axiom is a subdermal neural co-processor that links to your motor cortex, translating intent into machine input without a screen, a wire, or a delay you'd notice.</p>
+      <div class="hero-actions">
+        <a href="#how" class="btn btn-primary">See how it works</a>
+        <a href="#specs" class="btn btn-ghost">Read the specs</a>
+      </div>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <svg viewBox="0 0 400 400" width="100%" height="100%">
+        <defs>
+          <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#4de1ec" stop-opacity=".25"/>
+            <stop offset="100%" stop-color="#4de1ec" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle cx="200" cy="200" r="180" fill="url(#glow)"/>
+        <circle cx="200" cy="200" r="120" fill="none" stroke="#1e2634" stroke-width="1"/>
+        <circle cx="200" cy="200" r="150" fill="none" stroke="#1e2634" stroke-width="1"/>
+        <g stroke="#4de1ec" stroke-width="1.4" fill="none">
+          <path d="M200 80 V50"/>
+          <path d="M200 320 V350"/>
+          <path d="M80 200 H50"/>
+          <path d="M320 200 H350"/>
+        </g>
+        <g fill="#4de1ec">
+          <circle cx="200" cy="50" r="4"/>
+          <circle cx="200" cy="350" r="4"/>
+          <circle cx="50" cy="200" r="4"/>
+          <circle cx="350" cy="200" r="4"/>
+        </g>
+        <g stroke="#ff5b8f" stroke-width="1" fill="none" opacity=".7">
+          <path d="M140 260 L165 210 L190 245 L215 175 L260 200"/>
+        </g>
+        <circle cx="200" cy="200" r="6" fill="#ff5b8f"/>
+      </svg>
+    </div>
+  </section>
+
+  <div class="stats">
+    <div class="wrap">
+      <div class="stat"><b>0.8ms</b><span>signal-to-actuation latency</span></div>
+      <div class="stat"><b>128</b><span>independent motor channels</span></div>
+      <div class="stat"><b>11yr</b><span>battery life, wireless charge</span></div>
+      <div class="stat"><b>340k</b><span>hours of implant operation logged</span></div>
+    </div>
+  </div>
+
+  <section id="capabilities" class="wrap">
+    <div class="section-head">
+      <p class="kicker">Capabilities</p>
+      <h2>Built to sit under skin, not on top of attention.</h2>
+      <p class="desc">Three subsystems, one coin-sized implant. Each does one job well and hands off cleanly to the next.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <p class="idx">Sense</p>
+        <h3>Cortical read array</h3>
+        <p>A 128-channel array reads intent signals directly from the motor cortex, filtering noise in hardware before anything reaches software.</p>
+      </div>
+      <div class="card">
+        <p class="idx">Translate</p>
+        <h3>On-device inference</h3>
+        <p>A low-power model turns raw signal into discrete commands locally. Nothing leaves the implant until you choose to pair a device.</p>
+      </div>
+      <div class="card">
+        <p class="idx">Act</p>
+        <h3>Haptic return channel</h3>
+        <p>Machines talk back through the same link — pressure, texture, and proximity, rendered as nerve-native feedback instead of a buzz.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="how" class="wrap">
+    <div class="section-head">
+      <p class="kicker">How it works</p>
+      <h2>From intent to action in four steps.</h2>
+    </div>
+    <div class="timeline">
+      <div class="tl-item">
+        <p class="step-label">Step 1</p>
+        <h3>Placement</h3>
+        <p>A 40-minute outpatient procedure sets the array beneath the scalp. No external hardware, no visible scar within six weeks.</p>
+      </div>
+      <div class="tl-item">
+        <p class="step-label">Step 2</p>
+        <h3>Calibration</h3>
+        <p>Two weeks of guided use lets the on-device model learn your signal patterns. Most users stop noticing the calibration app by day nine.</p>
+      </div>
+      <div class="tl-item">
+        <p class="step-label">Step 3</p>
+        <h3>Pairing</h3>
+        <p>Pair with any Axiom-compatible device over a short-range encrypted link. Pairing is revocable from the implant at any time.</p>
+      </div>
+      <div class="tl-item">
+        <p class="step-label">Step 4</p>
+        <h3>Daily use</h3>
+        <p>Intent becomes input. Think a motion, the paired device receives it — typing, steering, gripping, all without a hand in between.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="specs" class="wrap">
+    <div class="section-head">
+      <p class="kicker">Specifications</p>
+      <h2>The numbers, for people who ask for them.</h2>
+    </div>
+    <table class="specs-table">
+      <tr><td>Dimensions</td><td>22mm diameter, 3.1mm depth</td></tr>
+      <tr><td>Channels</td><td>128 independent motor + 64 sensory return</td></tr>
+      <tr><td>Latency</td><td>0.8ms median, 2.1ms p99</td></tr>
+      <tr><td>Power</td><td>Inductive wireless charge, 11-year cell life</td></tr>
+      <tr><td>Connectivity</td><td>Short-range encrypted link, revocable pairing</td></tr>
+      <tr><td>Data handling</td><td>On-device inference; raw signal never leaves the implant</td></tr>
+      <tr><td>Procedure</td><td>Outpatient, ~40 minutes, local anesthetic</td></tr>
+    </table>
+  </section>
+
+  <section class="wrap">
+    <div class="cta">
+      <div>
+        <h2>Join the next intake.</h2>
+        <p>Axiom is currently placing implants in five clinical partner cities, with broader availability planned for next year.</p>
+      </div>
+      <a href="#" class="btn btn-primary">Join the waitlist</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 Axiom Neural</span>
+    <span>Investigational device — not yet approved for general sale</span>
+  </div>
+</footer>
+
+</body>
+</html>
